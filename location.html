@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Tracking Map</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -15,28 +15,12 @@
         }
 
         #map {
-            height: 80vh;
-        }
-
-        .controls {
-            padding: 10px;
-            background: #f4f4f4;
-        }
-
-        input {
-            margin: 5px;
-            padding: 5px;
+            height: 100vh;
         }
     </style>
 </head>
 
 <body>
-
-    <div class="controls">
-        Latitude: <input type="text" id="lat1" placeholder="Enter Latitude">
-        Longitude: <input type="text" id="lng1" placeholder="Enter Longitude">
-        Zoom: <input type="text" id="zoom1" value="13">
-    </div>
 
     <div id="map"></div>
 
@@ -44,58 +28,50 @@
 
     <script>
 
-        const map = L.map('map').setView([25.3176, 82.9739], 13);
+        const map = L.map('map').setView([25.3176, 82.9739], 15);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
+            maxZoom: 19,
         }).addTo(map);
 
-        let marker = L.marker([25.3176, 82.9739]).addTo(map).bindPopup('Varanasi').openPopup();
+        let marker = L.marker([25.3176, 82.9739]).addTo(map);
+
+        let latlngs = [];
+        let polyline = L.polyline(latlngs, { color: 'blue', weight: 5 }).addTo(map);
 
         async function getLocationName(lat, lng) {
             try {
-
-                const res = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-                );
-
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await res.json();
-
-                return (
-                    data.address.city ||
-                    data.address.town ||
-                    data.address.village ||
-                    data.display_name ||
-                    "Unknown location"
-                );
-
+                return data.address.city || data.address.town || data.address.village || "Unknown";
             } catch {
                 return "Location not found";
             }
         }
 
-        async function updateMap() {
+        navigator.geolocation.watchPosition(async function (position) {
 
-            const lat = parseFloat(document.getElementById('lat1').value);
-            const lng = parseFloat(document.getElementById('lng1').value);
-            const zoom = parseFloat(document.getElementById('zoom1').value);
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
 
-            if (isNaN(lat) || isNaN(lng)) return;
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng]);
+
+            latlngs.push([lat, lng]);
+            polyline.setLatLngs(latlngs);
 
             const locationName = await getLocationName(lat, lng);
+            marker.bindPopup(locationName).openPopup();
 
-            map.setView([lat, lng], zoom || 13);
-
-            marker
-                .setLatLng([lat, lng])
-                .bindPopup(`${locationName}<br>Lat: ${lat}<br>Lng: ${lng}`)
-                .openPopup();
-        }
-
-
-        document.getElementById('lat1').addEventListener('input', updateMap);
-        document.getElementById('lng1').addEventListener('input', updateMap);
-        document.getElementById('zoom1').addEventListener('input', updateMap);
+        },
+            function (error) {
+                console.log("Error:", error.message);
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            });
 
     </script>
 
