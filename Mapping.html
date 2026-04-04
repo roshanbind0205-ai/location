@@ -4,24 +4,29 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live Map</title>
+    <title>Auto Update Map</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+        }
+
         #map {
             height: 80vh;
         }
 
         .controls {
-            padding: 8px;
+            padding: 10px;
             background: #eee;
-            font-family: Arial;
         }
 
         input {
-            margin: 3px;
-            padding: 4px;
-            width: 120px;
+            padding: 6px;
+            margin: 4px;
+            width: 150px;
         }
     </style>
 </head>
@@ -29,9 +34,9 @@
 <body>
 
     <div class="controls">
-        Latitude: <input id="lat1" placeholder="Enter Latitude">
-        Longitude: <input id="lng1" placeholder="Enter Longitude">
-        Zoom: <input id="zoom1" value="15">
+        Latitude: <input id="lat" placeholder="Enter Latitude">
+        Longitude: <input id="lng" placeholder="Enter Longitude">
+        Zoom: <input id="zoom" value="17">
     </div>
 
     <div id="map"></div>
@@ -39,46 +44,48 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
 
-        const map = L.map("map").setView([25.3176, 82.9739], 15);
+        const map = L.map("map").setView([25.3176, 82.9739], 17);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
         let marker = L.marker([25.3176, 82.9739]).addTo(map);
-        let points = [];
-        let line = L.polyline(points, { color: "blue", weight: 4 }).addTo(map);
-        let totalDist = 0;
 
-        function calcDist(a, b, c, d) {
-            const R = 6371000;
-            const x = (c - a) * Math.PI / 180;
-            const y = (d - b) * Math.PI / 180;
-            const z = Math.sin(x / 2) ** 2 +
-                Math.cos(a * Math.PI / 180) * Math.cos(c * Math.PI / 180) * Math.sin(y / 2) ** 2;
-            return R * 2 * Math.atan2(Math.sqrt(z), Math.sqrt(1 - z));
-        }
+        function updateMapFromInput() {
+            let la = parseFloat(lat.value);
+            let ln = parseFloat(lng.value);
+            let zm = parseInt(zoom.value);
 
-        document.getElementById("zoom1").value = map.getZoom();
-        map.on("zoomend", () => document.getElementById("zoom1").value = map.getZoom());
-        document.getElementById("zoom1").onchange = () => map.setZoom(+zoom1.value);
-
-        navigator.geolocation.watchPosition(pos => {
-            let lat = pos.coords.latitude, lng = pos.coords.longitude;
-
-            if (points.length) {
-                let p = points[points.length - 1];
-                totalDist += calcDist(p[0], p[1], lat, lng);
+            if (!isNaN(la) && !isNaN(ln)) {
+                map.setView([la, ln], map.getZoom());
+                marker.setLatLng([la, ln]);
             }
 
-            marker.setLatLng([lat, lng]);
-            map.setView([lat, lng]);
+            if (!isNaN(zm)) {
+                map.setZoom(zm);
+            }
+        }
 
-            points.push([lat, lng]);
-            line.setLatLngs(points);
+        lat.oninput = updateMapFromInput;
+        lng.oninput = updateMapFromInput;
+        zoom.oninput = updateMapFromInput;
 
-            lat1.value = lat.toFixed(6);
-            lng1.value = lng.toFixed(6);
-            dist1.value = totalDist.toFixed(2);
+        navigator.geolocation.watchPosition(
+            pos => {
+                let la = pos.coords.latitude;
+                let ln = pos.coords.longitude;
 
-        });
+                marker.setLatLng([la, ln]);
+                map.panTo([la, ln]);
+
+                lat.value = la.toFixed(6);
+                lng.value = ln.toFixed(6);
+            },
+            err => alert("GPS Error: " + err.message),
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            }
+        );
 
     </script>
 
