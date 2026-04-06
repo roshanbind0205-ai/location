@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location</title>
+</head>
+
+<body>
+    <label id="lbl"></label>
+    <input id="lat" type="text">
+    <input id="lng" type="text">
+    <button onclick="startLoop()">Click</button>
+
+    
+    <script>
+        const lat = document.querySelector("#lat");
+        const lng = document.querySelector("#lng");
+        const lbl = document.querySelector("#lbl");
+
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0,
+        };
+
+        function success(pos) {
+            const crd = pos.coords;
+
+            console.log("Your current position is:");
+            console.log(`Latitude : ${crd.latitude}`);
+            console.log(`Longitude: ${crd.longitude}`);
+            console.log(`More or less ${crd.accuracy} meters.`);
+            lat.value = crd.latitude;
+            lng.value = crd.longitude;
+            lbl.textContent = "Found";
+        }
+
+        function error(err) {
+            console.warn(`ERROR(${err.code}): ${err.message}`);
+            lbl.textContent = "Error";
+        }
+
+        function getGeoLocation() {
+            lbl.textContent = "Searching";
+
+            navigator.geolocation.getCurrentPosition(success, error, options);
+        }
+        let loop = "";
+        function startLoop() {
+            loop = setInterval("getGeoLocation() ", 10000);
+        }
+        lbl.textContent = "Searching";
+    </script>
+
+</body>
+
+</html>

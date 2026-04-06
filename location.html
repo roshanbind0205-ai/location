@@ -17,11 +17,25 @@
         #map {
             height: 100vh;
         }
+
+        #infoBox {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            box-shadow: 0 0 10px #0003;
+            font-size: 14px;
+            z-index: 1000;
+        }
     </style>
 </head>
 
 <body>
 
+    <div id="infoBox">📍 Getting Location...</div>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -37,41 +51,57 @@
         let marker = L.marker([25.3176, 82.9739]).addTo(map);
 
         let latlngs = [];
-        let polyline = L.polyline(latlngs, { color: 'blue', weight: 5 }).addTo(map);
+        let polyline = L.polyline(latlngs, {
+            color: 'red',
+            weight: 4,
+            opacity: 0.8
+        }).addTo(map);
 
         async function getLocationName(lat, lng) {
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await res.json();
-                return data.address.city || data.address.town || data.address.village || "Unknown";
-            } catch {
+
+                return (
+                    data.address.suburb ||
+                    data.address.village ||
+                    data.address.town ||
+                    data.address.city ||
+                    data.address.state ||
+                    "Unknown"
+                );
+
+            } catch (e) {
                 return "Location not found";
             }
         }
 
-        navigator.geolocation.watchPosition(async function (position) {
+        navigator.geolocation.watchPosition(
+            async function (position) {
 
-            let lat = position.coords.latitude;
-            let lng = position.coords.longitude;
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
 
-            marker.setLatLng([lat, lng]);
-            map.setView([lat, lng]);
+                marker.setLatLng([lat, lng]);
 
-            latlngs.push([lat, lng]);
-            polyline.setLatLngs(latlngs);
+                latlngs.push([lat, lng]);
+                polyline.setLatLngs(latlngs);
 
-            const locationName = await getLocationName(lat, lng);
-            marker.bindPopup(locationName).openPopup();
+                const locationName = await getLocationName(lat, lng);
+                document.getElementById("infoBox").textContent = "📍 " + locationName;
 
-        },
-            function (error) {
-                console.log("Error:", error.message);
             },
+
+            function (error) {
+                document.getElementById("infoBox").textContent = "❌ Location Error: " + error.message;
+            },
+
             {
                 enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            });
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
 
     </script>
 
