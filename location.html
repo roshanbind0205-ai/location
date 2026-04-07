@@ -29,6 +29,23 @@
             box-shadow: 0 0 10px #0003;
             font-size: 14px;
             z-index: 1000;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        #clearBtn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 0 10px #0004;
         }
     </style>
 </head>
@@ -36,6 +53,7 @@
 <body>
 
     <div id="infoBox">📍 Getting Location...</div>
+    <button id="clearBtn">ALL CLEAR</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -57,22 +75,26 @@
             opacity: 0.8
         }).addTo(map);
 
-        async function getLocationName(lat, lng) {
+        async function getFullAddress(lat, lng) {
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                );
                 const data = await res.json();
 
-                return (
-                    data.address.suburb ||
-                    data.address.village ||
-                    data.address.town ||
-                    data.address.city ||
-                    data.address.state ||
-                    "Unknown"
-                );
+                let a = data.address;
 
-            } catch (e) {
-                return "Location not found";
+                return `
+                    ${a.road ? a.road + ", " : ""}
+                    ${a.suburb ? a.suburb + ", " : ""}
+                    ${a.village ? a.village + ", " : ""}
+                    ${a.town ? a.town + ", " : ""}
+                    ${a.city ? a.city + ", " : ""}
+                    ${a.county ? a.county + ", " : ""}
+                    ${a.state ? a.state : ""}
+                `.replace(/,\s*,/g, ", ").trim();
+            } catch {
+                return "Unknown place";
             }
         }
 
@@ -87,13 +109,16 @@
                 latlngs.push([lat, lng]);
                 polyline.setLatLngs(latlngs);
 
-                const locationName = await getLocationName(lat, lng);
-                document.getElementById("infoBox").textContent = "📍 " + locationName;
+                const fullAddress = await getFullAddress(lat, lng);
+
+                document.getElementById("infoBox").textContent =
+                    "📍 " + fullAddress;
 
             },
 
             function (error) {
-                document.getElementById("infoBox").textContent = "❌ Location Error: " + error.message;
+                document.getElementById("infoBox").textContent =
+                    "❌ Location Error: " + error.message;
             },
 
             {
@@ -102,6 +127,13 @@
                 maximumAge: 0
             }
         );
+
+        document.getElementById("clearBtn").addEventListener("click", () => {
+            latlngs = [];
+            polyline.setLatLngs([]);
+            document.getElementById("infoBox").textContent =
+                "✔ Cleared All Tracks";
+        });
 
     </script>
 

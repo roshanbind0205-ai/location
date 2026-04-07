@@ -4,21 +4,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location</title>
+    <title>Live Location Map</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        input {
+            margin: 5px;
+        }
+    </style>
 </head>
 
 <body>
-    <label id="lbl"></label>
-    <input id="lat" type="text">
-    <input id="lng" type="text">
-    <button onclick="startLoop()">Click</button>
 
-    
+    <h3>Live Location Tracking with Distance & Voice</h3>
+
+    <label id="lbl"></label> <br>
+
+    <b>Your Location:</b><br>
+    <input id="lat" type="text" placeholder="Your Latitude">
+    <input id="lng" type="text" placeholder="Your Longitude"><br>
+
+    <b>Destination Location:</b><br>
+    <input id="dlat" type="text" placeholder="Destination Latitude">
+    <input id="dlng" type="text" placeholder="Destination Longitude">
+
+    <button onclick="startLoop()">Start Tracking</button>
+    <button onclick="setDestination()">Set Destination</button>
+
+    <div id="map"></div>
+
     <script>
         const lat = document.querySelector("#lat");
         const lng = document.querySelector("#lng");
+        const dlat = document.querySelector("#dlat");
+        const dlng = document.querySelector("#dlng");
         const lbl = document.querySelector("#lbl");
 
+        let map, userMarker, destMarker;
+        let destination = null;
 
         const options = {
             enableHighAccuracy: true,
@@ -26,33 +57,98 @@
             maximumAge: 0,
         };
 
+        map = L.map("map").setView([0, 0], 2);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+        }).addTo(map);
+
         function success(pos) {
             const crd = pos.coords;
 
-            console.log("Your current position is:");
-            console.log(`Latitude : ${crd.latitude}`);
-            console.log(`Longitude: ${crd.longitude}`);
-            console.log(`More or less ${crd.accuracy} meters.`);
             lat.value = crd.latitude;
             lng.value = crd.longitude;
-            lbl.textContent = "Found";
+            lbl.textContent = "Location Updated";
+
+            updateUserMarker(crd.latitude, crd.longitude);
+
+            if (destination) {
+                let dist = calculateDistance(
+                    crd.latitude,
+                    crd.longitude,
+                    destination.lat,
+                    destination.lng
+                );
+
+                speak("Distance is " + Math.round(dist) + " meters");
+
+                console.log("Distance: " + dist);
+
+                lbl.textContent = "Distance: " + Math.round(dist) + " meters";
+            }
         }
 
         function error(err) {
-            console.warn(`ERROR(${err.code}): ${err.message}`);
-            lbl.textContent = "Error";
+            lbl.textContent = "Error Getting Location";
         }
 
         function getGeoLocation() {
-            lbl.textContent = "Searching";
-
+            lbl.textContent = "Searching...";
             navigator.geolocation.getCurrentPosition(success, error, options);
         }
+
+        function updateUserMarker(latVal, lngVal) {
+            if (!userMarker) {
+                userMarker = L.marker([latVal, lngVal]).addTo(map);
+            } else {
+                userMarker.setLatLng([latVal, lngVal]);
+            }
+            map.setView([latVal, lngVal], 16);
+        }
+
+        function setDestination() {
+            if (dlat.value === "" || dlng.value === "") {
+                alert("Enter Destination Lat / Lng");
+                return;
+            }
+
+            destination = {
+                lat: parseFloat(dlat.value),
+                lng: parseFloat(dlng.value),
+            };
+
+            if (!destMarker) {
+                destMarker = L.marker([destination.lat, destination.lng], { color: "red" }).addTo(map);
+            } else {
+                destMarker.setLatLng([destination.lat, destination.lng]);
+            }
+
+            lbl.textContent = "Destination Set";
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) *
+                Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            window.speechSynthesis.speak(speech);
+        }
+
         let loop = "";
         function startLoop() {
-            loop = setInterval("getGeoLocation() ", 10000);
+            loop = setInterval(getGeoLocation, 5000);
         }
-        lbl.textContent = "Searching";
     </script>
 
 </body>
