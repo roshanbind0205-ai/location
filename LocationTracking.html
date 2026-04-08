@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Map</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-family: Arial;
+        }
+
+        .searchBox {
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 8px 10px;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            width: 200px;
+        }
+
+        button {
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="info"><b>Distance:</b> <span id="distance">0</span> KM</div>
+
+    <div class="searchBox">
+        <select id="locationList">
+            <option value="">Select Location</option>
+            <option value="26.8467,80.9462">Lucknow</option>
+            <option value="28.7041,77.1025">Delhi</option>
+            <option value="19.0760,72.8777">Mumbai</option>
+            <option value="22.5726,88.3639">Kolkata</option>
+
+            <option value="25.1449,82.5653">Mirzapur City</option>
+            <option value="25.1337,82.5644">Mirzapur (Alt)</option>
+            <option value="25.1000,82.6000">Vindhyachal</option>
+            <option value="25.3000,82.7350">Kachhwa</option>
+            <option value="25.0660,82.4900">Ahraura</option>
+            <option value="25.2110,82.6760">Chunār</option>
+
+            <option value="26.8467,80.9462">Lucknow</option>
+            <option value="28.7041,77.1025">Delhi</option>
+            <option value="19.0760,72.8777">Mumbai</option>
+            <option value="22.5726,88.3639">Kolkata</option>
+            <option value="13.0827,80.2707">Chennai</option>
+            <option value="23.0225,72.5714">Ahmedabad</option>
+            <option value="21.1702,72.8311">Surat</option>
+            <option value="18.5204,73.8567">Pune</option>
+            <option value="25.3176,82.9739">Varanasi</option>
+            <option value="26.9124,75.7873">Jaipur</option>
+            <option value="25.5941,85.1376">Patna</option>
+            <option value="23.2599,77.4126">Bhopal</option>
+            <option value="26.7606,83.3732">Gorakhpur</option>
+            <option value="27.1767,78.0081">Agra</option>
+            <option value="28.9845,77.7064">Meerut</option>
+            <option value="29.9457,78.1642">Haridwar</option>
+            <option value="30.3165,78.0322">Dehradun</option>
+
+            <option value="25.3176,82.9739">Varanasi</option>
+            <option value="25.2820,82.9563">Kashi</option>
+            <option value="25.3010,83.0063">Assi Ghat</option>
+            <option value="25.3109,83.0104">Dashashwamedh Ghat</option>
+            <option value="25.2801,82.9998">Lanka</option>
+            <option value="25.3295,82.9722">Cantt (Varanasi Junction)</option>
+            <option value="25.3337,82.9991">Sigra</option>
+            <option value="25.3460,82.9310">Sarnath</option>
+
+            <option value="25.3107,83.0092">Kashi Vishwanath Mandir</option>
+            <option value="25.3171,82.9731">BHU Gate</option>
+            <option value="25.3317,82.9739">Tulsi Manas Mandir</option>
+            <option value="25.3017,83.0084">Assi Ghat</option>
+            <option value="25.3107,83.0092">Manikarnika Ghat</option>
+            <option value="25.3163,83.0108">Harishchandra Ghat</option>
+        </select>
+
+        <button onclick="addLocation()">Add</button>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        var greenIcon = L.icon({
+            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+        });
+
+        var redIcon = L.icon({
+            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+        });
+
+        var map = L.map("map").setView([0, 0], 2);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap",
+        }).addTo(map);
+
+        let userMarker, secondMarker, line;
+
+        navigator.geolocation.watchPosition(
+            (position) => {
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
+
+                if (!userMarker) map.setView([lat, lng], 15);
+
+                if (userMarker) map.removeLayer(userMarker);
+
+                userMarker = L.marker([lat, lng], { icon: greenIcon })
+                    .addTo(map)
+                    .bindPopup("Your Live Location 📍");
+
+                connectLocations();
+            },
+            () => alert("Please allow location access!")
+        );
+
+        function addLocation() {
+            let selected = document.getElementById("locationList").value;
+            if (selected === "") return;
+
+            let [lat2, lng2] = selected.split(",");
+            lat2 = Number(lat2);
+            lng2 = Number(lng2);
+
+            if (secondMarker) map.removeLayer(secondMarker);
+
+            secondMarker = L.marker([lat2, lng2], { icon: redIcon })
+                .addTo(map)
+                .bindPopup("Selected Location")
+                .openPopup();
+
+            map.setView([lat2, lng2], 13);
+
+            connectLocations();
+        }
+
+        function connectLocations() {
+            if (!userMarker || !secondMarker) return;
+
+            let p1 = userMarker.getLatLng();
+            let p2 = secondMarker.getLatLng();
+
+            if (line) map.removeLayer(line);
+
+            line = L.polyline([p1, p2], { color: "blue" }).addTo(map);
+
+            calculateDistance(p1, p2);
+        }
+
+        function calculateDistance(p1, p2) {
+            let distance = map.distance(p1, p2) / 1000;
+            distance = distance.toFixed(2);
+
+            document.getElementById("distance").innerText = distance;
+
+            speakDistance(distance);
+        }
+
+        function speakDistance(distance) {
+            let msg = new SpeechSynthesisUtterance("Distance is " + distance + " kilometers");
+            speechSynthesis.speak(msg);
+        }
+    </script>
+</body>
+
+</html>
