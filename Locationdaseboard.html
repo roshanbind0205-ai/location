@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Location</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 20px auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            max-width: 900px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #1086ee;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .logo {
+            margin-left: 94%;
+            margin-top: -50%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .whatsapp {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 65px;
+            height: 65px;
+            background: rgba(3, 245, 92, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 40px;
+            text-decoration: none;
+        }
+
+        .whatsapp:hover {
+            transform: scale(1.07) rotate(2deg);
+            background: #25D366;
+            box-shadow: 0 5px 15px rgba(4, 197, 4, 0.726);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="header-text">
+                <h1>Location</h1>
+                <p>Live Location Tracking</p>
+                <img class="logo" src="/download.png" alt="">
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>About project</h2>
+
+            <p>
+                This project is a web-based application that shows the users live GPS location on an interactive map
+                using the Geolocation API and Leaflet.js. It updates latitude, longitude, and movement in real time,
+                making it useful for navigation, tracking, and location-based services.
+            </p>
+            <a class="btn" href="https://roshanbind0205-ai.github.io/location/Map.html" target="_blank">
+
+                location
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>GitHub</h2>
+        <a class="btn" href="https://github.com/roshanbind0205-ai/location" target="_blank">
+            Open GitHub
+        </a>
+    </div>
+
+    <div class="card">
+        <h2>About Me</h2>
+        <p>I’m Roshan Bind, a web development learner building skills in HTML, CSS, JavaScript, and React. I enjoy
+            creating clean, responsive websites and improving my coding step by step.</p>
+    </div>
+
+    <a class="whatsapp" href="https://wa.me/918188935865" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+</body>
+
+</html>
